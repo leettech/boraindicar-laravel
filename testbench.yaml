@@ -1,0 +1,36 @@
+laravel: '@testbench'
+
+providers:
+  - Laravel\Cashier\CashierServiceProvider
+  - BoraIndicar\Laravel\BoraIndicarServiceProvider
+  - Workbench\App\Providers\WorkbenchServiceProvider
+
+migrations:
+  - database/migrations
+  - workbench/database/migrations
+
+seeders:
+  - Workbench\Database\Seeders\DatabaseSeeder
+
+env:
+  - APP_KEY=base64:2fl+Ktvkfl+Fuz4Qp/A75G2RTiWVA/ZoKZvp6fiiM10=
+  - APP_LOCALE=pt_BR
+  - BORAINDICAR_URL=http://localhost:8090
+  - BORAINDICAR_KEY=pk_workbench
+  - BORAINDICAR_SECRET=sk_workbench
+  - QUEUE_CONNECTION=sync
+  - CACHE_STORE=file
+  - SESSION_DRIVER=file
+  - DB_CONNECTION=sqlite
+
+workbench:
+  start: /boraindicar
+  user: 1
+  guard: web
+  install: false
+  discovers:
+    web: true
+  build:
+    - create-sqlite-db
+    - db-wipe
+    - migrate-fresh

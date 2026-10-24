@@ -1,0 +1,68 @@
+{
+    "name": "leettech/boraindicar-laravel",
+    "description": "Integração dos produtos Leettech com o boraindicar (programa de afiliados).",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.3",
+        "guzzlehttp/guzzle": "^7.8",
+        "illuminate/console": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/http": "^12.0|^13.0",
+        "illuminate/queue": "^12.0|^13.0",
+        "illuminate/routing": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "illuminate/view": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "laravel/cashier": "^16.5",
+        "laravel/pint": "^1.27",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.3",
+        "pestphp/pest-plugin-laravel": "^5.0"
+    },
+    "suggest": {
+        "laravel/cashier": "Reporta invoice.paid, charge.refunded e assinatura cancelada ao hub automaticamente (^16.5)."
+    },
+    "autoload": {
+        "psr-4": {
+            "BoraIndicar\\Laravel\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BoraIndicar\\Laravel\\BoraIndicarServiceProvider"
+            ],
+            "aliases": {
+                "BoraIndicar": "BoraIndicar\\Laravel\\Facades\\BoraIndicar"
+            }
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": "@clear",
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "test": "@php vendor/bin/pest"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

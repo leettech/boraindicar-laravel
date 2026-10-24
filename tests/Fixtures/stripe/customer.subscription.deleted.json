@@ -1,0 +1,15 @@
+{
+  "id": "evt_1QSubscriptionDeleted",
+  "object": "event",
+  "api_version": "2025-08-27.basil",
+  "type": "customer.subscription.deleted",
+  "data": {
+    "object": {
+      "id": "sub_1QBoraIndicarTest",
+      "object": "subscription",
+      "customer": "cus_BoraIndicarTest",
+      "status": "canceled",
+      "canceled_at": 1769904000
+    }
+  }
+}

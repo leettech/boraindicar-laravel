@@ -1,0 +1,20 @@
+{
+  "id": "evt_1QChargeRefunded",
+  "object": "event",
+  "api_version": "2025-08-27.basil",
+  "type": "charge.refunded",
+  "data": {
+    "object": {
+      "id": "ch_1QBoraIndicarTest",
+      "object": "charge",
+      "customer": "cus_BoraIndicarTest",
+      "amount": 12000,
+      "amount_captured": 12000,
+      "amount_refunded": 12000,
+      "currency": "brl",
+      "payment_intent": "pi_1QBoraIndicarTest",
+      "refunded": true,
+      "status": "succeeded"
+    }
+  }
+}

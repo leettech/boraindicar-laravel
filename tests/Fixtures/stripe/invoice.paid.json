@@ -1,0 +1,29 @@
+{
+  "id": "evt_1QInvoicePaid",
+  "object": "event",
+  "api_version": "2025-08-27.basil",
+  "type": "invoice.paid",
+  "data": {
+    "object": {
+      "id": "in_1QAbcInvoice",
+      "object": "invoice",
+      "customer": "cus_BoraIndicarTest",
+      "currency": "brl",
+      "amount_due": 12000,
+      "amount_paid": 12000,
+      "subtotal": 10000,
+      "total": 12000,
+      "total_excluding_tax": 10000,
+      "total_taxes": [
+        { "amount": 2000, "tax_behavior": "exclusive", "taxability_reason": "standard_rated" }
+      ],
+      "status": "paid",
+      "created": 1767225600,
+      "status_transitions": { "finalized_at": 1767225600, "paid_at": 1767229200 },
+      "parent": {
+        "type": "subscription_details",
+        "subscription_details": { "subscription": "sub_1QBoraIndicarTest" }
+      }
+    }
+  }
+}
