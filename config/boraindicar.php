@@ -7,7 +7,7 @@ return [
     | The public key (pk_) is used for clicks and the JS snippet; the secret
     | key (sk_) authenticates every other call.
     */
-    'url' => env('BORAINDICAR_URL', 'https://boraindicar.com'),
+    'url' => env('BORAINDICAR_URL', 'https://app.boraindicar.com'),
 
     'key' => env('BORAINDICAR_KEY'),
 

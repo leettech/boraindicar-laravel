@@ -1,6 +1,6 @@
 # leettech/boraindicar-laravel
 
-Integração dos produtos Leettech com o [boraindicar](https://boraindicar.com), o programa de afiliados. Com o pacote instalado:
+Integração dos produtos Leettech com o [boraindicar](https://app.boraindicar.com), o programa de afiliados. Com o pacote instalado:
 
 - o link do afiliado (`?ref=` / `?via=`) vira um cookie de servidor, first-touch; o prazo do link é o do produto, que o hub aplica no cadastro;
 - o cadastro (`Illuminate\Auth\Events\Registered`) vira indicação no hub;
@@ -11,6 +11,14 @@ Requer PHP 8.3+ e Laravel 12 ou 13. Cashier 16.5+ é opcional.
 
 ## Instalação
 
+O pacote é público no GitHub ([leettech/boraindicar-laravel](https://github.com/leettech/boraindicar-laravel)), fora do Packagist. Acrescente o repositório no `composer.json` do produto:
+
+```json
+"repositories": [
+    {"type": "vcs", "url": "https://github.com/leettech/boraindicar-laravel.git"}
+]
+```
+
 ```sh
 composer require leettech/boraindicar-laravel
 php artisan boraindicar:install
@@ -20,13 +28,13 @@ php artisan migrate
 `boraindicar:install` publica `config/boraindicar.php` e as migrations, e mostra o que pôr no `.env`:
 
 ```dotenv
-BORAINDICAR_URL=https://boraindicar.com
+BORAINDICAR_URL=https://app.boraindicar.com
 BORAINDICAR_KEY=pk_...              # chave pública (cliques e snippet)
 BORAINDICAR_SECRET=sk_...           # chave secreta (todo o resto)
 BORAINDICAR_COOKIE_DOMAIN=.seudominio.com.br
 ```
 
-As chaves ficam no hub, em **Time › Produtos › Chaves de API**. A secreta aparece uma vez só.
+As chaves ficam no hub, em **Admin › Programas › (o programa) › Chaves**. A secreta aparece uma vez só.
 
 Teste a conexão:
 
@@ -141,7 +149,7 @@ Landing em Blade:
 Landing em HTML estático (fora do Laravel), a mesma tag escrita à mão:
 
 ```html
-<script src="https://boraindicar.com/js/boraindicar.js" data-key="pk_..." data-domain=".seudominio.com.br" defer></script>
+<script src="https://app.boraindicar.com/js/boraindicar.js" data-key="pk_..." data-domain=".seudominio.com.br" defer></script>
 ```
 
 O cookie `boraindicar` é o JSON `{c, k, t, u}` codificado para URL no `Set-Cookie` (ex.: `%7B%22c%22%3A%22mar7k2qp%22...`). Quem lê pelo JS precisa de `decodeURIComponent` antes do `JSON.parse`; o pacote decodifica sozinho.

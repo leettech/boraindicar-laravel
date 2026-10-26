@@ -17,7 +17,7 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->components->info('Adicione ao .env (chaves em Time > Produtos > Chaves de API no hub):');
-        $this->line('BORAINDICAR_URL=https://boraindicar.com');
+        $this->line('BORAINDICAR_URL=https://app.boraindicar.com');
         $this->line('BORAINDICAR_KEY=pk_...');
         $this->line('BORAINDICAR_SECRET=sk_...');
         $this->line('BORAINDICAR_COOKIE_DOMAIN=.seudominio.com.br');
