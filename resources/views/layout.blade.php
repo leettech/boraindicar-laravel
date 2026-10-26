@@ -4,12 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" href="data:,">
-    <title>@yield('title', 'boraindicar')</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M0.9 12a2.1 2.1 0 1 0 4.2 0a2.1 2.1 0 1 0-4.2 0Z' fill='%230d4f61'/%3E%3Cpath d='M9.9 12a2.1 2.1 0 1 0 4.2 0a2.1 2.1 0 1 0-4.2 0Z' fill='%23ee6f61'/%3E%3Cpath d='M3 8.4C3 1.6 12 1.6 12 8.4M9.9 6.8l2.1 2.1 2.1-2.1' fill='none' stroke='%230d4f61' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <title>@yield('title', 'Bora Indicar')</title>
     <style>
+        /* The hub's petróleo brand (docs/design-decisions.md, 21), self-contained: the panel runs inside the product. */
         :root {
-            --bg: #f4f5f7; --card: #ffffff; --border: #e3e6ea; --text: #1f2933; --muted: #6b7785;
-            --brand: #4f46e5; --brand-soft: #eef0ff;
+            --bg: #f3f6f6; --card: #ffffff; --border: #d7e0e2; --text: #10222a; --muted: #586a70;
+            --brand: #0d4f61; --brand-strong: #093c4a; --brand-soft: #e1eff2; --brand-line: #a9cdd6; --accent: #ee6f61;
             --green: #15803d; --green-soft: #e8f7ee; --amber: #b45309; --amber-soft: #fdf3e1; --red: #b91c1c; --red-soft: #fdecec;
             --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         }
@@ -19,8 +20,12 @@
         a:hover { text-decoration: underline; }
         .topbar { background: var(--card); border-bottom: 1px solid var(--border); }
         .topbar .inner { max-width: 1180px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
-        .logo { width: 28px; height: 28px; border-radius: 8px; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 700; }
-        .topbar h1 { font-size: 16px; margin: 0; font-weight: 600; }
+        .logo { width: 26px; height: 26px; flex: none; }
+        .logo .dot-affiliate { fill: var(--brand); }
+        .logo .dot-client { fill: var(--accent); }
+        .logo .hop { fill: none; stroke: var(--brand); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+        .topbar h1 { font-size: 17px; margin: 0; font-weight: 800; letter-spacing: -0.02em; }
+        .topbar h1 span { color: var(--brand); }
         .topbar .hub { margin-left: auto; color: var(--muted); font-family: var(--mono); font-size: 12px; }
         main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 48px; display: grid; gap: 20px; }
         .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
@@ -44,7 +49,7 @@
         .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
         .btn:hover { border-color: #c7ccd3; text-decoration: none; }
         .btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
-        .btn-primary:hover { background: #4338ca; }
+        .btn-primary:hover { background: var(--brand-strong); }
         .btn-sm { padding: 3px 9px; font-size: 12px; }
         select { border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; font: inherit; font-size: 13px; background: var(--card); color: var(--text); }
         table { width: 100%; border-collapse: collapse; }
@@ -61,7 +66,7 @@
         .badge-muted { background: #eef0f2; color: var(--muted); }
         .error-text { color: var(--red); font-size: 12px; margin-top: 4px; max-width: 420px; word-break: break-word; }
         .empty { padding: 28px 18px; text-align: center; color: var(--muted); }
-        .flash { background: var(--brand-soft); border: 1px solid #d6d9ff; color: #3730a3; border-radius: 10px; padding: 10px 16px; }
+        .flash { background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand-strong); border-radius: 10px; padding: 10px 16px; }
         .warning { background: var(--amber-soft); border: 1px solid #f5dcae; color: var(--amber); border-radius: 10px; padding: 10px 16px; }
         .pagination { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding: 12px 18px; border-top: 1px solid var(--border); }
         .table-wrap { overflow-x: auto; }
@@ -72,8 +77,12 @@
 <body>
     <header class="topbar">
         <div class="inner">
-            <div class="logo">i</div>
-            <h1>boraindicar</h1>
+            <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+                <path class="dot-affiliate" d="M4 47a7 7 0 1 0 14 0a7 7 0 1 0-14 0Z"/>
+                <path class="dot-client" d="M42 47a7 7 0 1 0 14 0a7 7 0 1 0-14 0Z"/>
+                <path class="hop" d="M11 34C11 7 49 7 49 34M41 27l8 8 8-8"/>
+            </svg>
+            <h1>Bora <span>Indicar</span></h1>
             <span class="hub">{{ $hubUrl }}</span>
         </div>
     </header>
