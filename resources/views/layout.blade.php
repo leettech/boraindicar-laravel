@@ -11,7 +11,7 @@
         :root {
             --bg: #f3f6f6; --card: #ffffff; --border: #d7e0e2; --text: #10222a; --muted: #586a70;
             --brand: #0d4f61; --brand-strong: #093c4a; --brand-soft: #e1eff2; --brand-line: #a9cdd6; --accent: #ee6f61;
-            --green: #15803d; --green-soft: #e8f7ee; --amber: #b45309; --amber-soft: #fdf3e1; --red: #b91c1c; --red-soft: #fdecec;
+            --ok: var(--brand); --ok-soft: var(--brand-soft); --amber: #b45309; --amber-soft: #fdf3e1; --red: #b91c1c; --red-soft: #fdecec;
             --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         }
         * { box-sizing: border-box; }
@@ -39,10 +39,10 @@
         .stat .value { font-size: 26px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
         .stat .value.failed { color: var(--red); }
         .stat .value.pending { color: var(--amber); }
-        .stat .value.sent { color: var(--green); }
+        .stat .value.sent { color: var(--ok); }
         .conn { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
-        .dot.ok { background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+        .dot.ok { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); }
         .dot.error { background: var(--red); box-shadow: 0 0 0 4px var(--red-soft); }
         .muted { color: var(--muted); }
         .mono { font-family: var(--mono); font-size: 12px; }
@@ -59,7 +59,7 @@
         td.when { white-space: nowrap; }
         td.num { text-align: right; font-variant-numeric: tabular-nums; }
         .badge { display: inline-block; border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 500; white-space: nowrap; }
-        .badge-sent { background: var(--green-soft); color: var(--green); }
+        .badge-sent { background: var(--ok-soft); color: var(--ok); }
         .badge-pending { background: var(--amber-soft); color: var(--amber); }
         .badge-failed { background: var(--red-soft); color: var(--red); }
         .badge-type { background: var(--brand-soft); color: var(--brand); }
