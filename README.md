@@ -47,7 +47,7 @@ Rode um worker de fila (`php artisan queue:work` ou Horizon). Os eventos são en
 
 ## Como funciona
 
-1. **Captura**: o middleware `CaptureReferral` entra no grupo `web` sozinho. Em todo `GET` com `?ref=` (ou `?via=`), se ainda não existe cookie válido, ele grava o cookie `boraindicar` com `{c, k, t, u}` (código, click id, timestamp, UTMs). O cookie é JSON puro (fora do `EncryptCookies`, sem `httpOnly`) para o snippet do hub ler o mesmo valor. A atribuição também fica na sessão (`boraindicar.attribution`), o que cobre o vai e volta de login social. Se veio `ref` sem `ix` (link direto no site, não pelo `/r/{code}` do hub), o clique é registrado no hub com a chave pública.
+1. **Captura**: o middleware `CaptureReferral` entra no grupo `web` sozinho. Em todo `GET` com `?ref=` (ou `?via=`), se ainda não existe cookie válido, ele grava o cookie `boraindicar` com `{c, k, t, u}` (código, click id, timestamp, UTMs). O cookie é JSON puro (fora do `EncryptCookies`, sem `httpOnly`) para o snippet do hub ler o mesmo valor. A atribuição também fica na sessão (`boraindicar.attribution`), o que cobre o vai e volta de login social. Se veio `ref` sem `ix` (link direto no site, não pelo `/r/{produto}/{handle}` do hub), o clique é registrado no hub com a chave pública.
 2. **Cadastro**: no `Registered`, se há atribuição, o pacote manda a indicação (`POST /api/v1/referrals`, com `clicked_at`, a hora da captura), grava `boraindicar_referrals` e apaga o cookie. O hub recusa (`attributed: false`) o cadastro que veio depois do prazo do link do produto.
 3. **Pagamento, reembolso, cancelamento**: automático com Cashier (abaixo) ou manual pela facade.
 
