@@ -23,10 +23,12 @@ return [
     /*
     | First-party cookie written by the server. Use a leading-dot domain
     | (".example.com") to share it between the landing page and the app.
+    | `days` is only how long the browser keeps it: the hub applies the
+    | product's link window ("o link vale N dias"), up to 365.
     */
     'cookie' => [
         'name' => 'boraindicar',
-        'days' => 90,
+        'days' => 365,
         'domain' => env('BORAINDICAR_COOKIE_DOMAIN'),
     ],
 

@@ -115,6 +115,7 @@ class BoraIndicarManager
             'utm' => $attribution->utm,
             'signed_up_at' => ($signedUpAt === null ? CarbonImmutable::now() : CarbonImmutable::parse($signedUpAt))
                 ->utc()->toIso8601String(),
+            'clicked_at' => $attribution->capturedAt->utc()->toIso8601String(),
         ], afterCreate: fn () => BoraIndicarReferral::query()->firstOrCreate(['customer_id' => $customerId], [
             'code' => $attribution->code,
             'click_id' => $attribution->clickId,
@@ -337,7 +338,7 @@ class BoraIndicarManager
 
     private function valid(?Attribution $attribution): ?Attribution
     {
-        return $attribution !== null && ! $attribution->isExpired((int) $this->config->get('boraindicar.cookie.days', 90))
+        return $attribution !== null && ! $attribution->isExpired((int) $this->config->get('boraindicar.cookie.days', 365))
             ? $attribution
             : null;
     }

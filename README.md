@@ -2,7 +2,7 @@
 
 Integração dos produtos Leettech com o [boraindicar](https://boraindicar.com), o programa de afiliados. Com o pacote instalado:
 
-- o link do afiliado (`?ref=` / `?via=`) vira um cookie de servidor, first-touch, válido por 90 dias;
+- o link do afiliado (`?ref=` / `?via=`) vira um cookie de servidor, first-touch; o prazo do link é o do produto, que o hub aplica no cadastro;
 - o cadastro (`Illuminate\Auth\Events\Registered`) vira indicação no hub;
 - com Laravel Cashier, `invoice.paid`, `charge.refunded` e `customer.subscription.deleted` viram pagamento, reembolso e cancelamento no hub;
 - tudo passa por uma fila com retry (outbox em `boraindicar_events`) e aparece no painel `/boraindicar`.
@@ -40,7 +40,7 @@ Rode um worker de fila (`php artisan queue:work` ou Horizon). Os eventos são en
 ## Como funciona
 
 1. **Captura**: o middleware `CaptureReferral` entra no grupo `web` sozinho. Em todo `GET` com `?ref=` (ou `?via=`), se ainda não existe cookie válido, ele grava o cookie `boraindicar` com `{c, k, t, u}` (código, click id, timestamp, UTMs). O cookie é JSON puro (fora do `EncryptCookies`, sem `httpOnly`) para o snippet do hub ler o mesmo valor. A atribuição também fica na sessão (`boraindicar.attribution`), o que cobre o vai e volta de login social. Se veio `ref` sem `ix` (link direto no site, não pelo `/r/{code}` do hub), o clique é registrado no hub com a chave pública.
-2. **Cadastro**: no `Registered`, se há atribuição, o pacote manda a indicação (`POST /api/v1/referrals`), grava `boraindicar_referrals` e apaga o cookie.
+2. **Cadastro**: no `Registered`, se há atribuição, o pacote manda a indicação (`POST /api/v1/referrals`, com `clicked_at`, a hora da captura), grava `boraindicar_referrals` e apaga o cookie. O hub recusa (`attributed: false`) o cadastro que veio depois do prazo do link do produto.
 3. **Pagamento, reembolso, cancelamento**: automático com Cashier (abaixo) ou manual pela facade.
 
 Cada fato vira uma linha em `boraindicar_events` com uma chave de idempotência (`payment:{id}`, `lead:{id}`...). Chamar duas vezes com os mesmos dados não duplica nada.
@@ -155,7 +155,7 @@ O cookie `boraindicar` é o JSON `{c, k, t, u}` codificado para URL no `Set-Cook
 | `url`, `key`, `secret` | env | hub e chaves |
 | `enabled` | `true` se há `BORAINDICAR_SECRET` | desligado: nada é gravado nem enviado |
 | `query_params` | `['ref', 'via']` | parâmetros com o código do afiliado |
-| `cookie.name` / `days` / `domain` | `boraindicar` / 90 / `BORAINDICAR_COOKIE_DOMAIN` | cookie de atribuição |
+| `cookie.name` / `days` / `domain` | `boraindicar` / 365 / `BORAINDICAR_COOKIE_DOMAIN` | cookie de atribuição; `days` é só quanto o navegador guarda (o prazo do link é o do produto, no hub) |
 | `attribution` | `first` | first-touch (o primeiro link vale) |
 | `user_model` | `App\Models\User` | usado pelo painel para mostrar nome/e-mail |
 | `customer_id` | `id` | atributo enviado como `external_id` |

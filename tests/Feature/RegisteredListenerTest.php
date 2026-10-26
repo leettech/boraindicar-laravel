@@ -40,6 +40,7 @@ it('reports the lead with the exact payload and remembers the referral', functio
             'click_id' => '01JBX7Z8Q9R0S1T2V3W4X5Y6Z7',
             'utm' => ['utm_source' => 'instagram'],
             'signed_up_at' => '2026-03-01T11:59:00+00:00',
+            'clicked_at' => '2026-02-28T17:33:20+00:00',
         ]);
 
     Http::assertSent(fn (Request $request) => $request->url() === 'https://hub.test/api/v1/referrals'

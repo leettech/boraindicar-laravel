@@ -44,7 +44,7 @@ it('keeps the first touch when a valid cookie exists', function () {
 });
 
 it('overwrites an expired cookie', function () {
-    $expired = '{"c":"first001","k":null,"t":'.CarbonImmutable::now()->subDays(91)->getTimestamp().',"u":{}}';
+    $expired = '{"c":"first001","k":null,"t":'.CarbonImmutable::now()->subDays(366)->getTimestamp().',"u":{}}';
 
     $this->withUnencryptedCookie('boraindicar', $expired)
         ->get('/landing?ref=second02&ix=01JBX7Z8Q9R0S1T2V3W4X5Y6Z7')
