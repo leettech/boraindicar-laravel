@@ -18,3 +18,10 @@ it('renders nothing without a public key', function () {
 
     expect(Blade::render('@boraindicarScript'))->toBe('');
 });
+
+it('passes custom query params to the snippet', function () {
+    config(['boraindicar.query_params' => ['via']]);
+
+    expect(Blade::render('@boraindicarScript'))
+        ->toBe('<script src="https://hub.test/js/boraindicar.js" data-key="pk_test" data-domain=".exemplo.test" data-params="via" defer></script>');
+});

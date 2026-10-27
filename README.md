@@ -2,12 +2,12 @@
 
 Integração dos produtos Leettech com o [boraindicar](https://app.boraindicar.com), o programa de afiliados. Com o pacote instalado:
 
-- o link do afiliado (`?ref=` / `?via=`) vira um cookie de servidor, first-touch; o prazo do link é o do produto, que o hub aplica no cadastro;
-- o cadastro (`Illuminate\Auth\Events\Registered`) vira indicação no hub;
+- o link do afiliado (`?ref=` / `?via=`, configurável) vira um cookie de servidor, first-touch; o prazo do link é o do produto, que o hub aplica no cadastro;
+- o cadastro (`Illuminate\Auth\Events\Registered` do model de cliente) vira indicação no hub;
 - com Laravel Cashier, `invoice.paid`, `charge.refunded` e `customer.subscription.deleted` viram pagamento, reembolso e cancelamento no hub;
 - tudo passa por uma fila com retry (outbox em `boraindicar_events`) e aparece no painel `/boraindicar`.
 
-Requer PHP 8.3+ e Laravel 12 ou 13. Cashier 16.5+ é opcional.
+Requer PHP 8.3+ e Laravel 11, 12 ou 13 (Guzzle 7.8+ ou 8). Cashier 15 ou 16 é opcional.
 
 ## Instalação
 
@@ -47,7 +47,7 @@ Rode um worker de fila (`php artisan queue:work` ou Horizon). Os eventos são en
 
 ## Como funciona
 
-1. **Captura**: o middleware `CaptureReferral` entra no grupo `web` sozinho. Em todo `GET` com `?ref=` (ou `?via=`), se ainda não existe cookie válido, ele grava o cookie `boraindicar` com `{c, k, t, u}` (código, click id, timestamp, UTMs). O cookie é JSON puro (fora do `EncryptCookies`, sem `httpOnly`) para o snippet do hub ler o mesmo valor. A atribuição também fica na sessão (`boraindicar.attribution`), o que cobre o vai e volta de login social. Se veio `ref` sem `ix` (link direto no site, não pelo `/r/{produto}/{handle}` do hub), o clique é registrado no hub com a chave pública.
+1. **Captura**: o middleware `CaptureReferral` entra no grupo `web` sozinho. Em todo `GET` com `?ref=` (ou `?via=`; veja `query_params`), se ainda não existe cookie válido, ele grava o cookie `boraindicar` com `{c, k, t, u}` (código, click id, timestamp, UTMs). O cookie é JSON puro (fora do `EncryptCookies`, sem `httpOnly`) para o snippet do hub ler o mesmo valor. A atribuição também fica na sessão (`boraindicar.attribution`), o que cobre o vai e volta de login social. Se veio `ref` sem `ix` (link direto no site, não pelo `/r/{produto}/{handle}` do hub), o clique é registrado no hub com a chave pública.
 2. **Cadastro**: no `Registered`, se há atribuição, o pacote manda a indicação (`POST /api/v1/referrals`, com `clicked_at`, a hora da captura), grava `boraindicar_referrals` e apaga o cookie. O hub recusa (`attributed: false`) o cadastro que veio depois do prazo do link do produto.
 3. **Pagamento, reembolso, cancelamento**: automático com Cashier (abaixo) ou manual pela facade.
 
@@ -60,10 +60,10 @@ Com `laravel/cashier` instalado, o pacote escuta `Laravel\Cashier\Events\Webhook
 | Webhook Stripe | Vira | Detalhe |
 |---|---|---|
 | `invoice.paid` | `payment` | valor base sem imposto: `total_excluding_tax` (ou `amount_paid` − impostos); fatura zerada é ignorada |
-| `charge.refunded` | `refund` | total quando `refunded=true`; parcial manda o acumulado `amount_refunded`. A fatura vem de `charge.invoice` ou, na API `basil`, do pagamento da fatura do payment intent |
+| `charge.refunded` | `refund` | total quando `refunded=true`; parcial manda o acumulado `amount_refunded`. A fatura vem de `charge.invoice` ou, na API `basil` (stripe-php com `invoicePayments`, Cashier 16), do pagamento da fatura do payment intent; cobrança avulsa sem fatura é ignorada |
 | `customer.subscription.deleted` | `cancel` | chaveado pela assinatura: cancelar, assinar de novo e cancelar outra vez é reportado de novo |
 
-O cliente é achado com `Cashier::findBillable($customer)`. Garanta que o webhook do Stripe inclui esses três eventos.
+O cliente é achado com `Cashier::findBillable($customer)`. Garanta que o webhook do Stripe inclui esses três eventos. Com o pacote desligado (`enabled`), o listener nem entra na fila: nada é gravado e o Stripe não é chamado.
 
 ## Desconto no checkout
 
@@ -162,10 +162,10 @@ O cookie `boraindicar` é o JSON `{c, k, t, u}` codificado para URL no `Set-Cook
 |---|---|---|
 | `url`, `key`, `secret` | env | hub e chaves |
 | `enabled` | `true` se há `BORAINDICAR_SECRET` | desligado: nada é gravado nem enviado |
-| `query_params` | `['ref', 'via']` | parâmetros com o código do afiliado |
+| `query_params` | `BORAINDICAR_QUERY_PARAMS`, padrão `ref,via` | parâmetros com o código do afiliado, em ordem. Se o produto já usa `?ref=` para outra coisa (indicação própria), use `BORAINDICAR_QUERY_PARAMS=via`; o `@boraindicarScript` repassa a lista ao snippet (`data-params`) |
 | `cookie.name` / `days` / `domain` | `boraindicar` / 365 / `BORAINDICAR_COOKIE_DOMAIN` | cookie de atribuição; `days` é só quanto o navegador guarda (o prazo do link é o do produto, no hub) |
 | `attribution` | `first` | first-touch (o primeiro link vale) |
-| `user_model` | `App\Models\User` | usado pelo painel para mostrar nome/e-mail |
+| `user_model` | `BORAINDICAR_USER_MODEL`, ou `auth.providers.users.model` | model de cliente: só ele vira indicação no `Registered` (outro model, como um comprador do marketplace, é ignorado); o painel mostra nome/e-mail dele |
 | `customer_id` | `id` | atributo enviado como `external_id` |
 | `queue.connection` / `queue.queue` | padrão do app / `default` | fila dos envios e do listener do Stripe |
 | `middleware_group` | `web` | `null` para registrar `CaptureReferral` você mesmo |

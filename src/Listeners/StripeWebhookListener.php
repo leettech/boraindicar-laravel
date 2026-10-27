@@ -12,6 +12,7 @@ use Laravel\Cashier\Events\WebhookReceived;
 /**
  * Cashier has no handler for invoice.paid nor charge.refunded, so this reads
  * WebhookReceived. Queued: resolving a refund's invoice may call Stripe.
+ * Disabled integration: neither queued nor handled, so Stripe is never called.
  */
 final class StripeWebhookListener implements ShouldQueue
 {
@@ -24,7 +25,7 @@ final class StripeWebhookListener implements ShouldQueue
 
     public function shouldQueue(WebhookReceived $event): bool
     {
-        return in_array($event->payload['type'] ?? null, self::TYPES, true);
+        return $this->boraindicar->enabled() && in_array($event->payload['type'] ?? null, self::TYPES, true);
     }
 
     /** Called on an instance built without the constructor, hence config(). */
@@ -40,6 +41,10 @@ final class StripeWebhookListener implements ShouldQueue
 
     public function handle(WebhookReceived $event): void
     {
+        if (! $this->boraindicar->enabled()) {
+            return;
+        }
+
         $object = data_get($event->payload, 'data.object', []);
 
         match ($event->payload['type'] ?? null) {

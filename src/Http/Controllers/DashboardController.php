@@ -3,6 +3,7 @@
 namespace BoraIndicar\Laravel\Http\Controllers;
 
 use BoraIndicar\Laravel\Actions\PingHub;
+use BoraIndicar\Laravel\BoraIndicarManager;
 use BoraIndicar\Laravel\Enums\EventStatus;
 use BoraIndicar\Laravel\Enums\EventType;
 use BoraIndicar\Laravel\Models\BoraIndicarEvent;
@@ -16,7 +17,7 @@ use Illuminate\Validation\Rule;
 
 class DashboardController
 {
-    public function index(Request $request, PingHub $ping, ConfigRepository $config): View
+    public function index(Request $request, PingHub $ping, ConfigRepository $config, BoraIndicarManager $boraindicar): View
     {
         $filters = $request->validate([
             'status' => ['nullable', Rule::enum(EventStatus::class)],
@@ -47,7 +48,7 @@ class DashboardController
             'enabled' => (bool) $config->get('boraindicar.enabled'),
             'events' => $events,
             'referrals' => $referrals,
-            'customers' => $this->customersOf($referrals, $config),
+            'customers' => $this->customersOf($referrals, $boraindicar->userModel(), $config),
             'status' => $status,
             'type' => $type,
         ]);
@@ -57,14 +58,14 @@ class DashboardController
      * Customer models keyed by the attribute sent as external_id, in one query.
      *
      * @param  Collection<int, BoraIndicarReferral>  $referrals
+     * @param  class-string|null  $model
      * @return Collection<string, Model>
      */
-    private function customersOf(Collection $referrals, ConfigRepository $config): Collection
+    private function customersOf(Collection $referrals, ?string $model, ConfigRepository $config): Collection
     {
-        $model = $config->get('boraindicar.user_model');
         $attribute = $config->get('boraindicar.customer_id', 'id');
 
-        if ($referrals->isEmpty() || ! is_string($model) || ! class_exists($model) || ! is_subclass_of($model, Model::class)) {
+        if ($referrals->isEmpty() || $model === null || ! is_subclass_of($model, Model::class)) {
             return collect();
         }
 

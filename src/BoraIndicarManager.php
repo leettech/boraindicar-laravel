@@ -45,6 +45,14 @@ class BoraIndicarManager
         return (bool) $this->config->get('boraindicar.enabled');
     }
 
+    /** The customer model: boraindicar.user_model, else the app's auth users model. */
+    public function userModel(): ?string
+    {
+        $model = $this->config->get('boraindicar.user_model') ?: $this->config->get('auth.providers.users.model');
+
+        return is_string($model) && class_exists($model) ? $model : null;
+    }
+
     /** Valid, non-expired attribution from the cookie, then the session, then the query string. */
     public function attribution(?Request $request = null): ?Attribution
     {
@@ -250,8 +258,10 @@ class BoraIndicarManager
         $src = rtrim((string) $this->config->get('boraindicar.url'), '/').'/js/boraindicar.js';
         $domain = $this->config->get('boraindicar.cookie.domain');
         $domainAttribute = blank($domain) ? '' : ' data-domain="'.e($domain).'"';
+        $params = (array) $this->config->get('boraindicar.query_params');
+        $paramsAttribute = $params === ['ref', 'via'] ? '' : ' data-params="'.e(implode(',', $params)).'"';
 
-        return new HtmlString('<script src="'.e($src).'" data-key="'.e($key).'"'.$domainAttribute.' defer></script>');
+        return new HtmlString('<script src="'.e($src).'" data-key="'.e($key).'"'.$domainAttribute.$paramsAttribute.' defer></script>');
     }
 
     /**

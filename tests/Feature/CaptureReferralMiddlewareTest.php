@@ -89,3 +89,29 @@ it('does nothing when disabled', function () {
 
     expect(setCookieHeader($response))->toBeNull()->and(BoraIndicarEvent::query()->count())->toBe(0);
 });
+
+it('reads only the configured query params, leaving the product own ref alone', function () {
+    config(['boraindicar.query_params' => ['via']]);
+
+    $response = $this->get('/landing?ref=t-amigo123')->assertOk();
+
+    expect(setCookieHeader($response))->toBeNull()
+        ->and(BoraIndicarEvent::query()->count())->toBe(0);
+
+    $this->get('/landing?via=mar7k2qp&ix=01JBX7Z8Q9R0S1T2V3W4X5Y6Z7')
+        ->assertPlainCookie('boraindicar', '{"c":"mar7k2qp","k":"01JBX7Z8Q9R0S1T2V3W4X5Y6Z7","t":1772366400,"u":{}}');
+});
+
+it('takes the query params from BORAINDICAR_QUERY_PARAMS, ref and via by default', function () {
+    $config = fn () => (require __DIR__.'/../../config/boraindicar.php')['query_params'];
+
+    expect($config())->toBe(['ref', 'via']);
+
+    $_SERVER['BORAINDICAR_QUERY_PARAMS'] = $_ENV['BORAINDICAR_QUERY_PARAMS'] = ' via ';
+
+    try {
+        expect($config())->toBe(['via']);
+    } finally {
+        unset($_SERVER['BORAINDICAR_QUERY_PARAMS'], $_ENV['BORAINDICAR_QUERY_PARAMS']);
+    }
+});

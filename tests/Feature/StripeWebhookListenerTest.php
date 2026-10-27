@@ -4,11 +4,15 @@ use BoraIndicar\Laravel\Contracts\ResolvesInvoice;
 use BoraIndicar\Laravel\Enums\EventType;
 use BoraIndicar\Laravel\Listeners\StripeWebhookListener;
 use BoraIndicar\Laravel\Models\BoraIndicarEvent;
+use BoraIndicar\Laravel\Stripe\StripeInvoiceResolver;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Laravel\Cashier\Events\WebhookReceived;
+use Stripe\ApiRequestor;
+use Stripe\Service\InvoicePaymentService;
 use Tests\Fakes\FakeInvoiceResolver;
+use Tests\Fakes\FakeStripeHttpClient;
 
 beforeEach(function () {
     Http::fake(['hub.test/*' => Http::response(['ok' => true])]);
@@ -118,4 +122,70 @@ it('caps the base at what was charged when credit paid part of the invoice', fun
     event(new WebhookReceived($payload));
 
     expect(BoraIndicarEvent::query()->sole()->payload['amount_cents'])->toBe(4000);
+});
+
+it('neither queues nor handles webhooks with the integration disabled', function () {
+    config(['boraindicar.enabled' => false]);
+    $resolver = new class implements ResolvesInvoice
+    {
+        public function invoiceIdForPaymentIntent(string $paymentIntentId): ?string
+        {
+            throw new LogicException('Stripe must not be called while disabled.');
+        }
+    };
+    $this->app->instance(ResolvesInvoice::class, $resolver);
+
+    expect(app(StripeWebhookListener::class)->shouldQueue(new WebhookReceived(stripeFixture('charge.refunded'))))->toBeFalse();
+
+    event(new WebhookReceived(stripeFixture('charge.refunded')));
+    app(StripeWebhookListener::class)->handle(new WebhookReceived(stripeFixture('charge.refunded')));
+
+    expect(BoraIndicarEvent::query()->count())->toBe(0);
+    Http::assertNothingSent();
+});
+
+describe('StripeInvoiceResolver', function () {
+    beforeEach(fn () => config(['cashier.secret' => 'sk_test_stripe']));
+    afterEach(fn () => ApiRequestor::setHttpClient(null));
+
+    it('finds the invoice through the invoice payment of the payment intent', function () {
+        ApiRequestor::setHttpClient($stripe = new FakeStripeHttpClient([
+            [['object' => 'list', 'data' => [['id' => 'inpay_1', 'object' => 'invoice_payment', 'invoice' => 'in_1QAbcInvoice']]], 200],
+        ]));
+
+        expect((new StripeInvoiceResolver)->invoiceIdForPaymentIntent('pi_1QBoraIndicarTest'))->toBe('in_1QAbcInvoice')
+            ->and($stripe->requests[0]['path'])->toBe('/v1/invoice_payments');
+    })->skip(! class_exists(InvoicePaymentService::class), 'stripe-php without invoice payments');
+
+    it('detects a stripe-php without invoice payments (Cashier 15)', function () {
+        ApiRequestor::setHttpClient($stripe = new FakeStripeHttpClient([]));
+
+        expect((new StripeInvoiceResolver)->invoiceIdForPaymentIntent('pi_1QBoraIndicarTest'))->toBeNull()
+            ->and($stripe->requests)->toBe([]);
+    })->skip(class_exists(InvoicePaymentService::class), 'stripe-php with invoice payments');
+
+    it('returns null without calling Stripe when stripe-php has no invoice payments (Cashier 15)', function () {
+        ApiRequestor::setHttpClient($stripe = new FakeStripeHttpClient([]));
+
+        expect((new StripeInvoiceResolver(invoicePayments: false))->invoiceIdForPaymentIntent('pi_1QBoraIndicarTest'))->toBeNull()
+            ->and($stripe->requests)->toBe([]);
+    });
+
+    it('ignores a refunded one-off charge without invoice', function () {
+        $this->app->instance(ResolvesInvoice::class, new StripeInvoiceResolver(invoicePayments: false));
+        $payload = stripeFixture('charge.refunded');
+        $payload['data']['object']['invoice'] = null;
+
+        event(new WebhookReceived($payload));
+
+        expect(BoraIndicarEvent::query()->count())->toBe(0);
+    });
+
+    it('uses charge.invoice when the charge carries it (pre-basil API)', function () {
+        $this->app->instance(ResolvesInvoice::class, new StripeInvoiceResolver(invoicePayments: false));
+
+        event(new WebhookReceived(stripeFixture('charge.refunded.partial')));
+
+        expect(BoraIndicarEvent::query()->sole()->payload['payment_external_id'])->toBe('in_1QAbcInvoice');
+    });
 });

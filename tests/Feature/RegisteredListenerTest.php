@@ -7,6 +7,7 @@ use BoraIndicar\Laravel\Models\BoraIndicarEvent;
 use BoraIndicar\Laravel\Models\BoraIndicarReferral;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\GenericUser;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
@@ -84,4 +85,30 @@ it('is not registered when auto.registered is off', function () {
     $this->rebootWith(['boraindicar.auto.registered' => false]);
 
     expect(Event::getRawListeners()[Registered::class] ?? [])->not->toContain(RecordLeadOnRegistered::class);
+});
+
+it('ignores Registered for a model other than the customer model', function () use ($cookie) {
+    Route::middleware('web')->post('/register-buyer', function () {
+        event(new Registered(new GenericUser(['id' => 1])));
+
+        return 'ok';
+    });
+
+    $this->withUnencryptedCookie('boraindicar', $cookie)->post('/register-buyer')->assertOk();
+
+    expect(BoraIndicarEvent::query()->count())->toBe(0)->and(BoraIndicarReferral::query()->count())->toBe(0);
+    Http::assertNothingSent();
+
+    // The attribution survives for the customer who signs up next with the same id.
+    $this->withUnencryptedCookie('boraindicar', $cookie)->post('/register')->assertOk();
+
+    expect(BoraIndicarEvent::query()->sole()->idempotency_key)->toBe('lead:1');
+});
+
+it('falls back to the auth users model without boraindicar.user_model', function () use ($cookie) {
+    config(['boraindicar.user_model' => null]);
+
+    $this->withUnencryptedCookie('boraindicar', $cookie)->post('/register')->assertOk();
+
+    expect(BoraIndicarEvent::query()->sole()->idempotency_key)->toBe('lead:1');
 });
